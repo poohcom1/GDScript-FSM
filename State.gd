@@ -1,36 +1,82 @@
+"""
+	The base State class. 
+	To create a state, override this class and create an instance in the desired node.
+	
+	To create a state machine, create a variable to represent the current_state, 
+		and set it to the entrypoint state.
+	Then, call perform_and_transition(delta) on every process frame, and set current_state
+		to the return value of the function. This will automatically change the state
+		if a transition is detected.
+"""
 class_name State
 
-const LOOP_WARNING_THRESHOLD = 50
-	
-var parent: Entity
-var sprite: String
-var next_states: Array
+# Properties
+const LOOP_WARNING_THRESHOLD = 50 # Amount of state loop before warnings are emitted
 
-var _force_next_state: State
+# Fields
+var parent: Entity # Parent object
+var name: String # Name of state
 
-var previous_state: State
+var next_states: Array # Next states to transition to
+var previous_state: State # The previous transitioned from
 
-var time: float = 0
+var _force_next_state: State # State to force a transition to
 
-func _init(_parent: Entity, _sprite: String):
+var time: float = 0 # State time in seconds
+
+func _init(_parent: Entity, _name: String):
 	self.parent = _parent
-	self.sprite = _sprite
+	self.name = _name
 	
+# Virtual functions
+
+"""
+	The update function of the state. 
+	Override with the main logic of the state
+"""
+func perform(_delta: float):
+	pass
+	
+"""
+	Condition to ENTER the state.
+	Every frame, every next_state's condition is checked.
+"""
+func condition(_state: State) -> bool:
+	return false
+
+"""
+	Called once when state has just transitioned to this state.
+"""
+func on_entry():
+	pass
+	
+"""
+	Called once when the state has just transitioned to another state.
+"""
+func on_exit():
+	pass
+
+
+# Internal functions
+
+"""
+	The 'update/process' function of a state that should be called in every process frame.
+	Returns the next state to transition to, or itself if no transitions are detected.
+	
+	Example: If the states are stored in a variable called 'state', 
+		state = state.perform_and_transition(delta) should be in _physics_process()
+		of the parent object.
+"""
 func perform_and_transition(_delta) -> State:
 	time += _delta
 	perform(_delta)
 	return _transition()
-	
-func perform(_delta: float):
-	pass
-	
-func condition(_state: State) -> bool:
-	return false
+
 	
 func _transition(depth = 0) -> State:
 	if depth > LOOP_WARNING_THRESHOLD:
 		push_warning("Statemachine Warning: Loop detected. Depth: (%d) [%s]" % [depth-1, previous_state.sprite])
-		push_warning("Statemachine Warning: Loop detected. Depth: (%d) [%s]" % [depth, sprite])
+		push_warning("Statemachine Warning: Loop detected. Depth: (%d) [%s]" % [depth, name])
 		
 		return self
 	
@@ -57,10 +103,3 @@ func _on_transition(next_state: State):
 func force_transition(state: State):
 	_force_next_state = state
 	
-func on_entry():
-	self.parent.animatedSprite.animation = self.sprite
-	self.parent.animatedSprite.play()
-	
-func on_exit():
-	pass
-

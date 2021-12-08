@@ -1,9 +1,16 @@
+"""
+	A state that auto-transitions to an arbitrary state given a condition,
+		regardless of the target state's condition.
+
+	Example usages include transitioning to 'idle' state after landing a jump,
+		or transitioning to the next combo after animation has finished.
+"""
 extends State
 class_name AutoState
 
 var next_state
 
-func _init(parent: Entity, sprite, next: State).(parent, sprite):
+func _init(parent: Entity, name, next: State).(parent, name):
 	next_state = next
 
 func exit_condition() -> bool:
